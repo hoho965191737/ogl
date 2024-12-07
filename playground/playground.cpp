@@ -9,6 +9,8 @@ GLFWwindow* window;
 #include <glm/glm.hpp>
 using namespace glm;
 
+#include <common/shader.hpp>
+
 int main( void )
 {
 	// Initialize GLFW
@@ -37,6 +39,7 @@ int main( void )
 	glfwMakeContextCurrent(window);
 
 	// Initialize GLEW
+	glewExperimental = true;
 	if (glewInit() != GLEW_OK) {
 		fprintf(stderr, "Failed to initialize GLEW\n");
 		getchar();
@@ -50,10 +53,45 @@ int main( void )
 	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
 
+	GLuint VertexArrayID;
+	glGenVertexArrays(1, &VertexArrayID);
+	glBindVertexArray(VertexArrayID);
+
+	GLuint programID = LoadShaders("../tutorial02_red_triangle/SimpleVertexShader.vertexshader", "../tutorial02_red_triangle/SimpleFragmentShader.fragmentshader");
+
+	static const GLfloat g_vertex_buffer_data[] = {
+		-1.0f, -1.0f, 0.0f,
+		 1.0f, -1.0f, 0.0f,
+		 0.0f,  1.0f, 0.0f,
+	};
+
+	GLuint vertexbuffer;
+	glGenBuffers(1, &vertexbuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data), g_vertex_buffer_data, GL_STATIC_DRAW);
+
 	do{
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		// Draw nothing, see you in tutorial 2 !
+		// Draw Start ------------------------------
+		glUseProgram(programID);
+
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+		glVertexAttribPointer(
+			0,                  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+			3,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,                  // stride
+			(void*)0            // array buffer offset
+		);
+
+		glDrawArrays(GL_TRIANGLES, 0, 3); 
+
+		glDisableVertexAttribArray(0);
+
+		// Draw End --------------------------------
 
 		// Swap buffers
 		glfwSwapBuffers(window);
