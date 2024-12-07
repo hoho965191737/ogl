@@ -58,7 +58,7 @@ int main( void )
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
 
-	GLuint programID = LoadShaders("../tutorial03_matrices/SimpleTransform.vertexshader", "../tutorial03_matrices/SingleColor.fragmentshader");
+	GLuint programID = LoadShaders("./shaders/Transform.vertexshader", "./shaders/Color.fragmentshader");
 
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
 
