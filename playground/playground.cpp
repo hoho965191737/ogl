@@ -12,6 +12,7 @@ using namespace glm;
 
 #include <common/shader.hpp>
 #include <common/texture.hpp>
+#include <common/controls.hpp>
 
 int main( void )
 {
@@ -30,8 +31,10 @@ int main( void )
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make macOS happy; should not be needed
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+	int width{ 1024 };
+	int height{ 768 };
 	// Open a window and create its OpenGL context
-	window = glfwCreateWindow( 1024, 768, "Playground", NULL, NULL);
+	window = glfwCreateWindow(width, height, "Playground", NULL, NULL);
 	if( window == NULL ){
 		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
 		getchar();
@@ -51,6 +54,12 @@ int main( void )
 
 	// Ensure we can capture the escape key being pressed below
 	glfwSetInputMode(window, GLFW_STICKY_KEYS, GL_TRUE);
+	
+	// 隐藏鼠标并启用无限制移动
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
+	glfwPollEvents();
+	glfwSetCursorPos(window, width / 2, height / 2);
 
 	// Dark blue background
 	glClearColor(0.0f, 0.0f, 0.4f, 0.0f);
@@ -59,6 +68,9 @@ int main( void )
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 
+	// 启用背面剔除
+	glEnable(GL_CULL_FACE);
+
 	GLuint VertexArrayID;
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
@@ -66,17 +78,6 @@ int main( void )
 	GLuint programID = LoadShaders("./shaders/Transform.vertexshader", "./shaders/Color.fragmentshader");
 
 	GLuint MatrixID = glGetUniformLocation(programID, "MVP");
-
-	glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
-	glm::mat4 View = glm::lookAt(
-		glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
-		glm::vec3(0, 0, 0), // and looks at the origin
-		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-	);
-	glm::mat4 Model = glm::mat4(1.0f);
-
-	glm::mat4 MVP = Projection * View * Model;
-	
 
 	GLuint Texture = loadDDS("./uvtemplate.DDS");
 	GLuint TextureID = glGetUniformLocation(programID, "myTextureSampler");
@@ -177,6 +178,12 @@ int main( void )
 
 		// Draw Start ------------------------------
 		glUseProgram(programID);
+
+		computeMatricesFromInputs();
+		glm::mat4 Projection = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
+		glm::mat4 View = getViewMatrix();
+		glm::mat4 Model = glm::mat4(1.0f);
+		glm::mat4 MVP = Projection * View * Model;
 
 		glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &MVP[0][0]);
 
